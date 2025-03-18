@@ -1,0 +1,32 @@
+Data Collection & Preprocessing
+   Job Market Data Collection Agent
+   web scraping to extract job descriptions from job portals (LinkedIn, Indeed, Glassdoor).  
+   Extract relevant features: job title, required skills, industry trends, salary, and location.  
+
+
+ Resume Analysis Agent  
+   - Accept user-uploaded resumes (PDF, DOCX).  
+   - Use LLMs  to extract and structure skills, work experience, education, and projects.  
+   - Standardize and compare extracted skills against job market trends.  
+
+ Course Data Collection
+   - Use APIs from Coursera, Udemy, edX, etc.  
+   - Extract course details (title, skills covered, duration, cost, rating).  
+
+Skill Gap Analysis
+   NLP to compare candidate skills with industry demands.  
+   Identify missing or underdeveloped skills.  
+   Generate a structured report highlighting strengths, weaknesses, and improvement areas.  
+
+Course Recommendation System
+Course Recommender Agent
+   - Implement content-based filtering & collaborative filtering.  
+   - Rank and recommend courses based on identified skill gaps, user preferences, and past learning behavior.  
+   - Provide interactive filtering options (budget, course duration, platform).  
+
+
+Web App/API & Dashboard Development
+1. Streamlit for user interaction.  
+2. Flask/Django for handling API calls, resume processing, and job data analysis.  
+3. Database for storing job postings, resumes, and recommendations.  
+4. Visualization Dashboard for job trends and skill insights.

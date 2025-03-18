@@ -4,6 +4,7 @@ python-dotenv
 matplotlib
 seaborn
 plotly
+streamlit
 
 ipykernel
 
@@ -23,8 +24,14 @@ google-generativeai
 faiss-cpu
 pypdf
 pypdf2
+unstructured
+docx
+python-docx
 
 autogen
+pyautogen
 
 smolagents
 transformers
+
+exception

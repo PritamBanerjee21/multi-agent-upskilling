@@ -1,0 +1,8 @@
+autogen
+1. UserProxyAgent
+2. AssistantAgent
+3. TeachableAgent (the agent remembers things we told it across conversations)
+
+langchain
+1. tools
+2. custom functions
