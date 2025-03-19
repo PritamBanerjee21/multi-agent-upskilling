@@ -129,65 +129,61 @@ def create_model(name):
     else:
         return "please provide one among the following - 'gpt', 'groq', 'gemini'"
 
+def create_web_crawler_and_study_materials_agent():
 # def create_web_crawler_and_study_materials_agent():
-model=create_model("groq")
+    model=ChatGroq(
+        model="qwen-2.5-32b",
+        api_key=groq_api_key
+    )
 
-wiki_api_wrapper=WikipediaAPIWrapper(top_k_results=5)
-wiki_tool=WikipediaQueryRun(api_wrapper=wiki_api_wrapper,
-                            description="A tool to explain things in text format. Use this tool if you think the user’s asked concept is best explained through text.")
+    wiki_api_wrapper=WikipediaAPIWrapper(top_k_results=5)
+    wiki_tool=WikipediaQueryRun(api_wrapper=wiki_api_wrapper,
+                                description="A tool to explain things in text format. Use this tool if you think the user’s asked concept is best explained through text.")
 
-duckduckgo_api_wrapper=DuckDuckGoSearchAPIWrapper()
-duckduckgo_search_tool=DuckDuckGoSearchResults(api_wrapper=duckduckgo_api_wrapper,
-                        description="A search engine. Use this tool if you need to answer questions about current events. Input should be a search query.")
+    duckduckgo_api_wrapper=DuckDuckGoSearchAPIWrapper()
+    duckduckgo_search_tool=DuckDuckGoSearchResults(api_wrapper=duckduckgo_api_wrapper,
+                            description="A search engine. Use this tool if you need to answer questions about current events. Input should be a search query.")
 
-youtube_search_tool=Tool(
-    name="YouTube_Video_Search",
-    func=youtube_search,
-    description="Searches for YouTube videos related to a given query and returns the top 5 videos along with their links, titles, descriptions, and channel names"
-)
+    youtube_search_tool=Tool(
+        name="YouTube_Video_Search",
+        func=youtube_search,
+        description="Searches for YouTube videos related to a given query and returns the top 5 videos along with their links, titles, descriptions, and channel names"
+    )
 
-coursera_tool=Tool(
-    name="coursera_search_tool",
-    func=fetch_coursera_courses,
-    description="Fetch courses on the given topic."
-)
+    coursera_tool=Tool(
+        name="coursera_search_tool",
+        func=fetch_coursera_courses,
+        description="Fetch courses on the given topic."
+    )
 
-system_prompt="You are a helpful assistant named Friday."
+    system_prompt="You are a helpful assistant named Friday."
 
-text_gen_tool = Tool(
-    name="text_generator",
-    func=generate_text,
-    description="Use this tool to generate essays, summaries, or general text responses."
-)
+    text_gen_tool = Tool(
+        name="text_generator",
+        func=generate_text,
+        description="Use this tool to generate essays, summaries, or general text responses."
+    )
 
-tools=[wiki_tool,coursera_tool,duckduckgo_search_tool,youtube_search_tool,text_gen_tool]
-# memory=SqliteSaver("agent_memory.sqlite")
-# store = SQLiteStore(database_path="memory.sqlite")
-# memory=ConversationBufferMemory(memory_key="chat_history",chat_memory=store)
+    tools=[wiki_tool,coursera_tool,duckduckgo_search_tool,youtube_search_tool,text_gen_tool]
+    # memory=SqliteSaver("agent_memory.sqlite")
+    # store = SQLiteStore(database_path="memory.sqlite")
+    # memory=ConversationBufferMemory(memory_key="chat_history",chat_memory=store)
 
-agent = create_react_agent(
-    model=model,  
-    tools=tools,  # Keep the tools for structured outputs
-    state_modifier=system_prompt  # Allow direct responses
-    # checkpointer=memory
-)
+    agent = create_react_agent(
+        model=model,  
+        tools=tools,  # Keep the tools for structured outputs
+        state_modifier=system_prompt  # Allow direct responses
+        # checkpointer=memory
+    )
 
-# prompt_template = """
-#     You are an assistant capable of browsing the internet, fetching courses and youtube videos and answering questions based on user input. You will remember prior conversations and take them into account for a more accurate response. Return your answers in markdown format.
+    return agent
 
-#     Here is the context of the conversation:
-#     {chat_history}
+    # while True:
+    #     user_input = input("User: ")
+    #     response=agent.invoke({"messages":[HumanMessage(user_input)]})
 
-#     Now, answer the following question based on your previous conversation and the current query:
-#     {query}
-# """
+    #     response_text = response["messages"][-1].content  # Extract model's response
+    #     print(f"AI: {response_text}")
 
-while True:
-    user_input = input("User: ")
-    response=agent.invoke({"messages":[HumanMessage(user_input)]})
-
-    response_text = response["messages"][-1].content  # Extract model's response
-    print(f"AI: {response_text}")
-
-    if user_input.lower() == "exit":
-        break
+    #     if user_input.lower() == "exit":
+    #         break
