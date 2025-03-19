@@ -27,6 +27,10 @@ pypdf2
 unstructured
 docx
 python-docx
+wikipedia
+youtube-search
+google-api-python-client
+arxiv
 
 autogen
 pyautogen
