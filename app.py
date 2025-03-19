@@ -5,6 +5,7 @@ from io import BytesIO
 from PyPDF2 import PdfReader
 from docx import Document
 from helper import CandidateDetails, IsResume, get_resume_details
+from agents import create_web_crawler_and_study_materials_agent
 from pydantic import BaseModel, Field
 from typing import Optional, List, Literal
 
@@ -13,6 +14,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_openai import ChatOpenAI
 from langchain_groq import ChatGroq
+from langchain_core.prompts import PromptTemplate
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 load_dotenv()
 
@@ -51,4 +54,17 @@ btn1=st.sidebar.button("Submit")
 
 if btn1:
     response=get_resume_details(text=text, model='gemini')
-    st.write(response)
+    prompt_extract_details=PromptTemplate(
+        template="""You will be given academic details about a person which will be extracted from their resume beforehand. I need you to give me a summary of the candidate. The details are as follows:
+            {details}
+        """,
+        input_variables=["details"]
+    )
+    model=ChatGoogleGenerativeAI(
+        model='gemini-2.0-flash',
+        api_key=os.getenv("GEMINI_API_KEY")
+    )
+    # prompt=prompt_extract_details.invoke({"details":response})
+    chain=prompt_extract_details|model
+    response2=chain.invoke({"details":response})
+    st.markdown(response2.content)
