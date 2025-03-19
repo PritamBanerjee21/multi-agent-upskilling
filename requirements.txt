@@ -16,6 +16,7 @@ langchain-groq
 langchain-openai
 langchain-google-genai
 langchain-huggingface
+langgraph
 
 ollama
 groq
