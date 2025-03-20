@@ -24,6 +24,12 @@ class CandidateDetails(BaseModel):
 class IsResume(BaseModel):
     is_resume: Literal["yes", "no"] = Field(description="Determine if the given text is a resume or not. If it is a resume, return \"yes\", else return \"no\"")
 
+class SkillGaps(BaseModel):
+    profile_summary: str = Field(description="Extract the profile summary like skills, projects, education, experience")
+    strengths: list[str] = Field(description="Extract all the strenghts of the candidate.")
+    weaknesses: list[str] = Field(description="Extract the weaknesses and skill gaps of the candidate.")
+    areas_of_improvement: list[str] = Field(description="Extract the areas of improvement for the candidate in question.")
+
 groq_api_key=os.getenv('GROQ_API_KEY')
 os.environ["OPENAI_API_KEY"]=os.getenv('OPENAI_API_KEY')
 gemini_api_key=os.getenv('GEMINI_API_KEY')

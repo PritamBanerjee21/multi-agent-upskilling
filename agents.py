@@ -129,20 +129,34 @@ def create_model(name):
     else:
         return "please provide one among the following - 'gpt', 'groq', 'gemini'"
 
-def create_web_crawler_and_study_materials_agent():
-# def create_web_crawler_and_study_materials_agent():
-    model=ChatGroq(
-        model="qwen-2.5-32b",
-        api_key=groq_api_key
-    )
+def create_web_crawler_and_study_materials_agent(model="groq"):
+
+    if model=="groq":
+        model=ChatGroq(
+            model="qwen-2.5-32b",
+            api_key=groq_api_key
+        )
+
+    elif model=="gemini":
+        model=ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash",
+            api_key=os.getenv("GEMINI_API_KEY")
+        )
+
+    elif model=="gpt" or model=="openai":
+        model=ChatOpenAI(
+            model='gpt-4o'
+        )
 
     wiki_api_wrapper=WikipediaAPIWrapper(top_k_results=5)
     wiki_tool=WikipediaQueryRun(api_wrapper=wiki_api_wrapper,
-                                description="A tool to explain things in text format. Use this tool if you think the user’s asked concept is best explained through text.")
+                                description="A tool to explain things in text format. Use this tool if you think the user’s asked concept is best explained through text.",
+                                name="wiki_tool")
 
     duckduckgo_api_wrapper=DuckDuckGoSearchAPIWrapper()
     duckduckgo_search_tool=DuckDuckGoSearchResults(api_wrapper=duckduckgo_api_wrapper,
-                            description="A search engine. Use this tool if you need to answer questions about current events. Input should be a search query.")
+                            description="A search engine. Use this tool if you need to answer questions about current events. Input should be a search query.",
+                            name="duckduckgo_search_tool")
 
     youtube_search_tool=Tool(
         name="YouTube_Video_Search",
@@ -177,13 +191,3 @@ def create_web_crawler_and_study_materials_agent():
     )
 
     return agent
-
-    # while True:
-    #     user_input = input("User: ")
-    #     response=agent.invoke({"messages":[HumanMessage(user_input)]})
-
-    #     response_text = response["messages"][-1].content  # Extract model's response
-    #     print(f"AI: {response_text}")
-
-    #     if user_input.lower() == "exit":
-    #         break
