@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from io import BytesIO
 from PyPDF2 import PdfReader
 from docx import Document
-from helper import CandidateDetails, IsResume, get_resume_details, SkillGaps
+from helper import CandidateDetails, IsResume, get_resume_details, SkillGaps, get_resume_details_from_image
 from agents import create_web_crawler_and_study_materials_agent
 from pydantic import BaseModel, Field
 from typing import Optional, List, Literal
@@ -30,7 +30,7 @@ st.set_page_config(page_title="SkillSync AI",
 st.title("Find Your Dream Job!")
 
 with st.sidebar:
-    uploaded_file=st.file_uploader("Upload your resume:",type=["pdf","docx","doc"])
+    uploaded_file=st.file_uploader("Upload your resume:",type=["pdf","docx","doc","png","jpg","jpeg"])
 
     if uploaded_file is not None:
 
@@ -45,6 +45,9 @@ with st.sidebar:
             doc = Document(file_buffer)  # Load DOCX directly from memory
             text = "\n".join([para.text for para in doc.paragraphs])
 
+        elif file_extension in ["png","jpg","jpeg"]:
+            text=get_resume_details_from_image(image_file_path=file_buffer)
+
         else:
             st.error("Unsupported file format.")
 
@@ -57,6 +60,7 @@ if "agent" not in st.session_state:
 btn1=st.sidebar.button("Submit")
 
 if btn1:
+
     career_summary=get_resume_details(text=text, model='gemini')
     prompt_extract_details=PromptTemplate(
         template="""You will be given academic details about a person which will be extracted from their resume beforehand. I need you to give me a summary of the candidate. The details are as follows:
@@ -115,18 +119,23 @@ if btn1:
     })
 
     agent_prompt_template_fetch_materials="""
-            You will receive summarized details about a candidate's weaknesses and areas of improvement weaknesses -> {skill_gaps_summary}. You will also get the job role/roles that suit(s) the candidate the best job roles -> {job_roles}. You need to fetch relevant courses or resources or information according to the candidate's weaknesses and areas of improvement and the job role. Use the tools at your disposal. Use multiple tools if and when required. Provide courses, materials from the internet and youtube video links and also provide URLs for each. Use all the tools given to you: youtube_search_tool, text_generator_tool, duckduckgo_search_tool, coursera_search_tool and wiki_tool. Address the candidate as a second person.
-        """
+        You will receive summarized details about a candidate's weaknesses and areas of improvement weaknesses -> {skill_gaps_summary}. You will also get the job role/roles that suit(s) the candidate the best job roles -> {job_roles}. You need to fetch relevant courses or resources or information according to the candidate's weaknesses and areas of improvement and the job role. Use the tools at your disposal. Use multiple tools if and when required. Provide courses, materials from the internet and youtube video links and also provide URLs for each. Use all the tools given to you: `youtube_search_tool`, `text_generator_tool`, `duckduckgo_search_tool`, `coursera_search_tool` and `wiki_tool`. Address the candidate as a second person.
+    """
 
     resources=st.session_state.agent.invoke({
         "messages":agent_prompt_template_fetch_materials.format(skill_gaps_summary=skill_gaps_summary, job_roles=job_roles)
     })
 
     st.markdown("## Finding resources...")
-    st.markdown("<think>")
-    for msg in range(1,len(resources.get("messages"))-1):
-        st.markdown(resources.get("messages")[msg].content)
-    st.markdown("</think>")
 
-    st.markdown("### **Here's what I found for you:**")
-    st.markdown(resources.get("messages")[-1].content)
+    if resources.get("messages")[-1].content!='':
+        st.markdown("### **Here's what I found for you:**")
+        st.markdown(resources.get("messages")[-1].content)
+
+        with st.expander("**See more!**"):
+            for index, doc in enumerate(resources.get("messages"), start=1):
+                st.markdown(doc.content)
+                st.write('----------------------------------')
+
+    else:
+        st.error("We encountered an internal error. Please retry.")
