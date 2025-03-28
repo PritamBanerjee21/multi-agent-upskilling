@@ -18,6 +18,7 @@ langchain-google-genai
 langchain-huggingface
 langgraph
 langchain-unstructured
+langgraph-checkpoint-sqlite
 
 ollama
 groq
@@ -34,8 +35,7 @@ youtube-search
 google-api-python-client
 arxiv
 unstructured
-unstructured-client
-"unstructured[image]"
+
 
 autogen
 pyautogen
