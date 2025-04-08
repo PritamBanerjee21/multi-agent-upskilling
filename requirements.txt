@@ -18,7 +18,7 @@ langchain-google-genai
 langchain-huggingface
 langgraph
 langchain-unstructured
-langgraph-checkpoint-sqlite
+langchain-tavily
 
 ollama
 groq
@@ -35,12 +35,14 @@ youtube-search
 google-api-python-client
 arxiv
 unstructured
-
+unstructured-client
+tavily-python
 
 autogen
 pyautogen
 
 smolagents
+smolagents[litellm]
 transformers
 
 exception

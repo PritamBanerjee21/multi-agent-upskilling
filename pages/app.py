@@ -17,6 +17,10 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.output_parsers import PydanticOutputParser, StrOutputParser
+from langchain.document_loaders import TextLoader
+
+
+from langgraph_agent import create_langgraph_agent, get_response
 
 load_dotenv()
 
@@ -57,6 +61,20 @@ with st.sidebar:
 if "agent" not in st.session_state:
     st.session_state.agent=create_web_crawler_and_study_materials_agent(model="gemini")
 
+# if "langgraph_agent" not in st.session_state:
+#     st.session_state.langgraph_agent=create_langgraph_agent(model="gemini")
+
+# if "config" not in st.session_state:
+#     st.session_state.config={
+#         "configurable":{"thread_id":"1"}
+#     }
+
+# if "chat_history" not in st.session_state:
+#     st.session_state.chat_history=[]
+
+
+config={"configurable":{"thread_id":"1"}}
+
 btn1=st.sidebar.button("Submit")
 
 if btn1:
@@ -76,6 +94,7 @@ if btn1:
     job_roles=career_summary.job_role
     
     industry_trends=st.session_state.agent.invoke({"messages":f"Do a detailed search for the required skillsets and current trend for the job roles {job_roles} and provide your answers in a clean format."})
+    
 
     industry_trends_results=str(industry_trends.get("messages")[-2].content)+str(industry_trends.get("messages")[-1].content)
 
@@ -126,6 +145,10 @@ if btn1:
         "messages":agent_prompt_template_fetch_materials.format(skill_gaps_summary=skill_gaps_summary, job_roles=job_roles)
     })
 
+    summarize_profile_prompt=PromptTemplate(
+        template="You are given the resume of a candidate -> {profile_summary}. You n"
+    )
+
     st.markdown("## Finding resources...")
 
     if resources.get("messages")[-1].content!='':
@@ -136,6 +159,59 @@ if btn1:
             for index, doc in enumerate(resources.get("messages"), start=1):
                 st.markdown(doc.content)
                 st.write('----------------------------------')
+    # else:
+    #     st.error("We encountered an internal error. Please retry.")
 
-    else:
-        st.error("We encountered an internal error. Please retry.")
+        # chatbot_agent=create_langgraph_agent(model="gemini")
+        # chat_container=st.container()
+        # with chat_container:
+        #     for msg in st.session_state.chat_history:
+        #             with st.chat_message(msg["role"]):
+        #                 st.markdown(msg["content"])
+
+        # user_input=st.chat_input("Write your query:")
+        # btn2=st.button("Send")
+
+        # if user_input:
+        #     st.write(user_input)
+
+        #     st.session_state.chat_history.append({"role":"user","content":user_input})
+            
+        #     response=get_response(user_input=user_input,config=config,agent=st.session_state.langgraph_agent)
+        #     print(response)
+
+        #     st.session_state.chat_history.append({"role": "assistant", "content": response})
+        #     st.write(st.session_state.chat_history)
+
+        #     st.rerun()
+
+        # else:
+        #     st.error("Please enter your query.")
+
+        # user_input = st.chat_input("Write your query:")
+
+        # # chat_container = st.container()
+        # # with chat_container:
+        # # for msg in st.session_state.chat_history:
+        # #     with st.chat_message(msg["role"]):
+        # #         st.markdown(msg["content"])
+
+        # # if user_input is not None:
+        #     # if user_input.strip() == "":
+        #     #     st.error("Bro... at least type *something* 😑")
+        #     # else:
+        # st.session_state.chat_history.append({"role": "user", "content": user_input})
+
+        # response = get_response(user_input=user_input, config=config, agent=st.session_state.langgraph_agent)
+
+        # st.session_state.chat_history.append({"role": "assistant", "content": response})
+
+        # for msg in st.session_state.chat_history:
+        #     with st.chat_message(msg["role"]):
+        #         st.markdown(msg["content"])
+        # # st.rerun()
+
+
+
+        # Display chat messages
+        
