@@ -46,3 +46,9 @@ smolagents[litellm]
 transformers
 
 exception
+
+PyMuPDF
+spacy
+sentence-transformers
+torch
+scikit-learn
