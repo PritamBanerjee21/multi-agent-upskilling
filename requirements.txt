@@ -5,8 +5,10 @@ matplotlib
 seaborn
 plotly
 streamlit
+pydantic
 
 ipykernel
+jupyter
 
 langchain
 langchain-core
@@ -17,6 +19,7 @@ langchain-openai
 langchain-google-genai
 langchain-huggingface
 langgraph
+langgraph.checkpoint.sqlite
 langchain-unstructured
 langchain-tavily
 

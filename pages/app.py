@@ -19,7 +19,6 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.output_parsers import PydanticOutputParser, StrOutputParser
 from langchain.document_loaders import TextLoader
 
-
 from langgraph_agent import create_langgraph_agent, get_response
 
 load_dotenv()

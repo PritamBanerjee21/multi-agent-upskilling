@@ -102,10 +102,10 @@ def create_langgraph_agent(model: str):
 
 def get_response(user_input:str,config:dict,agent):
 
-    model=ChatGroq(
-        model="llama-3.3-70b-specdec",
-        api_key=groq_api_key
-    )
+    # model=ChatGroq(
+    #     model="llama-3.3-70b-specdec",
+    #     api_key=groq_api_key
+    # )
 
     outputs=[]
 
@@ -133,8 +133,8 @@ def get_response(user_input:str,config:dict,agent):
         template="Convert the following into markdown -> {result}",
         input_variables=["result"],
     )
-
-    markdown_chain=prompt|model|parser
-    result=markdown_chain.invoke({"result":' '.join(outputs[-1].content)})
+    result=''.join(outputs[-1].content)
+    # markdown_chain=prompt|model|parser
+    # result=markdown_chain.invoke({"result":' '.join(outputs[-1].content)})
 
     return result
