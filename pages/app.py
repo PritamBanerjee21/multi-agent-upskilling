@@ -156,7 +156,7 @@ if btn1:
         st.markdown(resources.get("messages")[-1].content)
 
         with st.expander("**See more!**"):
-            for index, doc in enumerate(resources.get("messages"), start=1):
+            for index, doc in enumerate(resources.get("messages"), start=2):
                 st.markdown(doc.content)
                 st.write('----------------------------------')
     # else:
