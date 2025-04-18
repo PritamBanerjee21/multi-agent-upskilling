@@ -1,82 +1,52 @@
-import streamlit as st
 import os
 from dotenv import load_dotenv
+from pydantic import Field, BaseModel
+from typing import List, Optional, Literal
 from io import BytesIO
+from helper import get_resume_details, get_resume_details_from_image
 from PyPDF2 import PdfReader
 from docx import Document
-from helper import CandidateDetails, IsResume, get_resume_details, SkillGaps, get_resume_details_from_image
-from agents import create_web_crawler_and_study_materials_agent
-from pydantic import BaseModel, Field
-from typing import Optional, List, Literal
 
-from langchain.document_loaders import PyPDFLoader, UnstructuredWordDocumentLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain_openai import ChatOpenAI
-from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.output_parsers import PydanticOutputParser, StrOutputParser
-from langchain.document_loaders import TextLoader
+from langchain_groq import ChatGroq
+from langchain_core.output_parsers import StrOutputParser, PydanticOutputParser
+from helper import IsResume, SkillGaps
 
-from langgraph_agent import create_langgraph_agent, get_response
+def load_env_variables():
 
-load_dotenv()
+    load_dotenv()
 
-os.environ["OPENAI_API_KEY"]=os.getenv("OPENAI_API_KEY")
-groq_api_key=os.getenv("GROQ_API_KEY")
+    os.environ["OPENAI_API_KEY"]=os.getenv("OPENAI_API_KEY")
+    os.environ["TAVILY_API_KEY"]=os.getenv("TAVILY_API_KEY")
 
-st.set_page_config(page_title="SkillSync AI",
-                   layout="wide",
-                   page_icon='logo.jpg')
+    gemini_api_key=os.getenv("GEMINI_API_KEY")
+    youtube_api_key=os.getenv("YOUTUBE_API_KEY")
+    groq_api_key=os.getenv("GROQ_API_KEY")
 
-st.title("Find Your Dream Job!")
+    return gemini_api_key, youtube_api_key, groq_api_key
 
-with st.sidebar:
-    uploaded_file=st.file_uploader("Upload your resume:",type=["pdf","docx","doc","png","jpg","jpeg"])
+def load_file(uploaded_file):
 
     if uploaded_file is not None:
 
-        file_extension = uploaded_file.name.split('.')[-1]
-        file_buffer = BytesIO(uploaded_file.getbuffer())
+        file_extension = os.path.splitext(uploaded_file)[1]
+        file_buffer = uploaded_file
 
-        if file_extension == "pdf":
+        if file_extension == ".pdf":
             reader = PdfReader(file_buffer)
             text = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
 
-        elif file_extension in ["docx", "doc"]:
+        elif file_extension in [".docx", ".doc"]:
             doc = Document(file_buffer)  # Load DOCX directly from memory
             text = "\n".join([para.text for para in doc.paragraphs])
 
-        elif file_extension in ["png","jpg","jpeg"]:
+        elif file_extension in [".png",".jpg",".jpeg"]:
             text=get_resume_details_from_image(image_file_path=file_buffer)
 
-        else:
-            st.error("Unsupported file format.")
-
-    else:
-        st.warning("Please enter a file!")
-
-if "agent" not in st.session_state:
-    st.session_state.agent=create_web_crawler_and_study_materials_agent(model="gemini")
-
-# if "langgraph_agent" not in st.session_state:
-#     st.session_state.langgraph_agent=create_langgraph_agent(model="gemini")
-
-# if "config" not in st.session_state:
-#     st.session_state.config={
-#         "configurable":{"thread_id":"1"}
-#     }
-
-# if "chat_history" not in st.session_state:
-#     st.session_state.chat_history=[]
-
-
-config={"configurable":{"thread_id":"1"}}
-
-btn1=st.sidebar.button("Submit")
-
-if btn1:
+        return text
+    
+def get_suggestions(text,agent,api_keys: dict):
 
     career_summary=get_resume_details(text=text, model='gemini')
     prompt_extract_details=PromptTemplate(
@@ -87,12 +57,12 @@ if btn1:
     )
     model=ChatGoogleGenerativeAI(
         model='gemini-2.0-flash',
-        api_key=os.getenv("GEMINI_API_KEY")
+        api_key=api_keys["GEMINI_API_KEY"]
     )
 
     job_roles=career_summary.job_role
     
-    industry_trends=st.session_state.agent.invoke({"messages":f"Do a detailed search for the required skillsets and current trend for the job roles {job_roles} and provide your answers in a clean format."})
+    industry_trends=agent.invoke({"messages":f"Do a detailed search for the required skillsets and current trend for the job roles {job_roles} and provide your answers in a clean format."})
     
 
     industry_trends_results=str(industry_trends.get("messages")[-2].content)+str(industry_trends.get("messages")[-1].content)
@@ -125,8 +95,8 @@ if btn1:
     )
 
     model_groq=ChatGroq(
-        model="llama-3.3-70b-versatile",
-        api_key=groq_api_key
+        model="qwen-qwq-32b",
+        api_key=api_keys["GROQ_API_KEY"]
     )
 
     summarize_skill_gaps_chain=summarize_skill_gaps_prompt|model_groq|str_parser
@@ -140,21 +110,12 @@ if btn1:
         You will receive summarized details about a candidate's weaknesses and areas of improvement weaknesses -> {skill_gaps_summary}. You will also get the job role/roles that suit(s) the candidate the best job roles -> {job_roles}. You need to fetch relevant courses or resources or information according to the candidate's weaknesses and areas of improvement and the job role. Use the tools at your disposal. Use multiple tools if and when required. Provide courses, materials from the internet and youtube video links and also provide URLs for each. Use all the tools given to you: `youtube_search_tool`, `text_generator_tool`, `duckduckgo_search_tool`, `coursera_search_tool` and `wiki_tool`. Address the candidate as a second person.
     """
 
-    resources=st.session_state.agent.invoke({
+    resources=agent.invoke({
         "messages":agent_prompt_template_fetch_materials.format(skill_gaps_summary=skill_gaps_summary, job_roles=job_roles)
     })
 
-    summarize_profile_prompt=PromptTemplate(
-        template="You are given the resume of a candidate -> {profile_summary}. You n"
-    )
+    # summarize_profile_prompt=PromptTemplate(
+    #     template="You are given the resume of a candidate -> {profile_summary}. You n"
+    # )
 
-    st.markdown("## Finding resources...")
-
-    if resources.get("messages")[-1].content!='':
-        st.markdown("### **Here's what I found for you:**")
-        st.markdown(resources.get("messages")[-1].content)
-
-        with st.expander("**See more!**"):
-            for index, doc in enumerate(resources.get("messages"), start=2):
-                st.markdown(doc.content)
-                st.write('----------------------------------')
+    return resources
