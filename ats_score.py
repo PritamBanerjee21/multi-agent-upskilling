@@ -4,14 +4,39 @@ import fitz
 from sentence_transformers import SentenceTransformer, util
 from spacy.matcher import PhraseMatcher
 import re
+import os
+from io import BytesIO
+from PyPDF2 import PdfReader
+from docx import Document
+from helper_functions import load_file
 
 # Extracting text
 def extract_text_from_cv(pdf_path):
-    doc = fitz.open(pdf_path)
+
+    if isinstance(pdf_path,BytesIO):
+        doc=fitz.open("pdf",pdf_path.read())
+    else:
+        doc = fitz.open(pdf_path)
+        
     text = ""
     for page in doc:
         text += page.get_text()
     return text
+
+# def extract_text_from_cv(file_path):
+
+#     file_extension=os.path.splitext(file_path)[1]
+#     file_buffer=BytesIO(file_path.name.get_buffer())
+
+#     if file_extension == ".pdf":
+#         reader = PdfReader(file_buffer)
+#         text = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
+
+#     elif file_extension in [".docx", ".doc"]:
+#         doc = Document(file_buffer)  # Load DOCX directly from memory
+#         text = "\n".join([para.text for para in doc.paragraphs])
+
+#     return text
 
 # Preprocessing
 def clean_text(jd):
@@ -71,7 +96,8 @@ def keyword_match_score(resume_text, job_keywords):
 
 
 # Semantic similarity score
-model = SentenceTransformer('all-MiniLM-L6-v2')  
+# model = SentenceTransformer('all-MiniLM-L6-v2')
+model=SentenceTransformer("sentence-transformers-embedding")  
 
 def semantic_similarity(resume_text, job_text):
     embeddings = model.encode([resume_text, job_text], convert_to_tensor=True)
@@ -102,8 +128,17 @@ def calculate_final_score(keyword_score, semantic_score, skill_score):
 
 
 # Complete scoring process
-def score_resume(resume_path, job_description):
-    resume_text = extract_text_from_cv(resume_path)
+def score_resume(resume_path, job_description, scoring_function="extract"):
+
+    if scoring_function=="extract":
+        resume_text = extract_text_from_cv(resume_path)
+
+    elif scoring_function=="load_file":
+        resume_text=load_file(resume_path)
+    
+    else:
+        raise ValueError("Invalid value for scoring_function. Select one among 'extract' and 'load_file'.")
+
     jd_token, jd_doc = clean_text(job_description)
 
     job_keywords = extract_keywords(jd_doc)
@@ -125,4 +160,16 @@ def score_resume(resume_path, job_description):
         "matched_keywords": matched_keywords
     }
 
+if __name__=="__main__":
+    
+    # with open("job_desc_sample.txt","r") as f:
+    #     job_desc=f.read()
 
+    # result=score_resume(
+    #     resume_path=r"D:\Job Documents\Updated Resume (Data Scientist).pdf",
+    #     job_description=job_desc
+    # )
+
+    # print(result)
+
+    pass

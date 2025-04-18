@@ -1,0 +1,172 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+<style>
+    #hero {
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        color: white;
+        padding: 100px 0;
+        margin-bottom: 50px;
+        display: flex;
+        align-items: center;
+        min-height: 80vh;
+    }
+
+    #hero .container {
+        text-align: center;
+    }
+
+    #hero h1 {
+        font-size: 2.8rem;
+        font-weight: 700;
+        margin-bottom: 30px;
+        animation: fadeInUp 1s ease;
+    }
+
+    #hero p {
+        font-size: 1.2rem;
+        line-height: 1.6;
+        max-width: 800px;
+        margin: 0 auto;
+        animation: fadeInUp 1s ease 0.3s;
+        animation-fill-mode: both;
+    }
+
+    #how-it-works {
+        padding: 80px 0;
+        background-color: #f8f9fa;
+    }
+
+    #how-it-works h2 {
+        text-align: center;
+        margin-bottom: 50px;
+        color: #2c3e50;
+        font-weight: 700;
+    }
+
+    #how-it-works ul {
+        list-style: none;
+        padding: 0;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    #how-it-works li {
+        background: white;
+        padding: 25px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        position: relative;
+        padding-left: 70px;
+    }
+
+    #how-it-works li:hover {
+        transform: translateY(-5px);
+    }
+
+    #how-it-works li::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 30px;
+        height: 30px;
+        background-color: #3498db;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+    }
+
+    #how-it-works li:nth-child(1)::before { content: '1'; }
+    #how-it-works li:nth-child(2)::before { content: '2'; }
+    #how-it-works li:nth-child(3)::before { content: '3'; }
+    #how-it-works li:nth-child(4)::before { content: '4'; }
+
+    #call-to-action {
+        padding: 80px 0;
+        text-align: center;
+        background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+        color: white;
+    }
+
+    #call-to-action p {
+        font-size: 1.2rem;
+        max-width: 800px;
+        margin: 0 auto 30px;
+        line-height: 1.6;
+    }
+
+    .cta-button {
+        display: inline-block;
+        padding: 15px 40px;
+        background-color: white;
+        color: #2c3e50;
+        text-decoration: none;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .cta-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        color: #3498db;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section id="hero">
+    <div class="container">
+        <h1>Welcome to SkillSync – Your Personalized Path to Closing Career Skill Gaps</h1>
+        <p>
+            At SkillSync, we understand that in today's fast-paced job market, continuous learning is key to advancing your career. That's why we've built a platform that helps you identify your <strong>career skill gaps</strong> and provides tailored resources to help you <strong>bridge those gaps</strong> efficiently and effectively.
+        </p>
+    </div>
+</section>
+
+<section id="how-it-works">
+    <div class="container">
+        <h2>How We Help You</h2>
+        <ul>
+            <li><strong>Skill Gap Analysis</strong>: Through personalized assessments, we pinpoint exactly where your skills need to be strengthened to meet industry standards.</li>
+            <li><strong>Custom Learning Paths</strong>: Get access to a variety of learning modules designed to equip you with the latest, in-demand skills, whether it's coding, data analysis, project management, or more.</li>
+            <li><strong>Progress Tracking</strong>: Monitor your development in real-time as you master new skills and prepare yourself for career growth opportunities.</li>
+            <li><strong>Job Fit Recommendations</strong>: Based on your current skills and aspirations, we suggest roles that align with your goals, and highlight what you need to learn to qualify for your dream job.</li>
+        </ul>
+    </div>
+</section>
+
+<section id="call-to-action">
+    <div class="container">
+        <p>Our platform is not just about finding jobs; it's about <strong>empowering you</strong> to meet the evolving demands of the job market. Whether you're aiming for a promotion or switching fields entirely, we help you level up and ensure you're always <strong>one step ahead</strong> in your career.</p>
+        <p>Join us and start your journey towards <strong>skill mastery</strong> and a more fulfilling career today.</p>
+        <a href="{{ url_for('explore') }}" class="cta-button">Get Started</a>
+    </div>
+</section>
+{% endblock %}

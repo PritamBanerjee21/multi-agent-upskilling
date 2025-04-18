@@ -19,7 +19,6 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.output_parsers import PydanticOutputParser, StrOutputParser
 from langchain.document_loaders import TextLoader
 
-
 from langgraph_agent import create_langgraph_agent, get_response
 
 load_dotenv()
@@ -126,7 +125,7 @@ if btn1:
     )
 
     model_groq=ChatGroq(
-        model="qwen-2.5-32b",
+        model="llama-3.3-70b-versatile",
         api_key=groq_api_key
     )
 
@@ -159,59 +158,3 @@ if btn1:
             for index, doc in enumerate(resources.get("messages"), start=2):
                 st.markdown(doc.content)
                 st.write('----------------------------------')
-    # else:
-    #     st.error("We encountered an internal error. Please retry.")
-
-        # chatbot_agent=create_langgraph_agent(model="gemini")
-        # chat_container=st.container()
-        # with chat_container:
-        #     for msg in st.session_state.chat_history:
-        #             with st.chat_message(msg["role"]):
-        #                 st.markdown(msg["content"])
-
-        # user_input=st.chat_input("Write your query:")
-        # btn2=st.button("Send")
-
-        # if user_input:
-        #     st.write(user_input)
-
-        #     st.session_state.chat_history.append({"role":"user","content":user_input})
-            
-        #     response=get_response(user_input=user_input,config=config,agent=st.session_state.langgraph_agent)
-        #     print(response)
-
-        #     st.session_state.chat_history.append({"role": "assistant", "content": response})
-        #     st.write(st.session_state.chat_history)
-
-        #     st.rerun()
-
-        # else:
-        #     st.error("Please enter your query.")
-
-        # user_input = st.chat_input("Write your query:")
-
-        # # chat_container = st.container()
-        # # with chat_container:
-        # # for msg in st.session_state.chat_history:
-        # #     with st.chat_message(msg["role"]):
-        # #         st.markdown(msg["content"])
-
-        # # if user_input is not None:
-        #     # if user_input.strip() == "":
-        #     #     st.error("Bro... at least type *something* 😑")
-        #     # else:
-        # st.session_state.chat_history.append({"role": "user", "content": user_input})
-
-        # response = get_response(user_input=user_input, config=config, agent=st.session_state.langgraph_agent)
-
-        # st.session_state.chat_history.append({"role": "assistant", "content": response})
-
-        # for msg in st.session_state.chat_history:
-        #     with st.chat_message(msg["role"]):
-        #         st.markdown(msg["content"])
-        # # st.rerun()
-
-
-
-        # Display chat messages
-        

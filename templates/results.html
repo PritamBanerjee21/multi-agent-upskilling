@@ -1,0 +1,541 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+<style>
+    .main-container {
+        display: flex;
+        min-height: calc(100vh - 200px);
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .content-section {
+        flex: 1;
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .suggestions-section {
+        margin-top: 0;
+    }
+
+    .suggestions-section h2 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        font-size: 2rem;
+    }
+
+    .loading-spinner {
+        text-align: center;
+        margin: 20px 0;
+        padding: 20px;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .suggestions-content {
+        background-color: #f8f9fa;
+        padding: 30px;
+        border-radius: 8px;
+        line-height: 1.6;
+        font-size: 1.1rem;
+        min-height: 200px;
+    }
+
+    .suggestions-content h1,
+    .suggestions-content h2,
+    .suggestions-content h3,
+    .suggestions-content h4,
+    .suggestions-content h5,
+    .suggestions-content h6 {
+        color: #2c3e50;
+        margin-top: 1.5em;
+        margin-bottom: 0.5em;
+    }
+
+    .suggestions-content p {
+        margin-bottom: 1em;
+    }
+
+    .suggestions-content ul,
+    .suggestions-content ol {
+        margin-left: 1.5em;
+        margin-bottom: 1em;
+    }
+
+    .suggestions-content li {
+        margin-bottom: 0.5em;
+    }
+
+    .suggestions-content code {
+        background-color: #e9ecef;
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+        font-family: monospace;
+    }
+
+    .suggestions-content pre {
+        background-color: #e9ecef;
+        padding: 1em;
+        border-radius: 5px;
+        overflow-x: auto;
+        margin-bottom: 1em;
+    }
+
+    .suggestions-content blockquote {
+        border-left: 4px solid #3498db;
+        padding-left: 1em;
+        margin-left: 1em;
+        color: #666;
+    }
+
+    .suggestions-content a {
+        color: #3498db;
+        text-decoration: none;
+    }
+
+    .suggestions-content a:hover {
+        text-decoration: underline;
+    }
+
+    .loading-spinner p {
+        margin-top: 10px;
+        color: #666;
+        font-size: 1.1rem;
+    }
+
+    .button-container {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 30px;
+    }
+
+    .upload-button, .ats-button {
+        display: inline-block;
+        padding: 12px 30px;
+        background-color: #2c3e50;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+
+    .upload-button:hover, .ats-button:hover {
+        background-color: #3498db;
+        transform: translateY(-2px);
+    }
+
+    /* Updated chat interface styles */
+    .chat-section {
+        width: 350px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 200px);
+        position: fixed;
+        right: 20px;
+        top: 100px;
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+
+    .chat-collapsed {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        cursor: pointer;
+        background: #2c3e50;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .chat-collapsed:hover {
+        background: #3498db;
+        transform: scale(1.1);
+    }
+
+    .chat-collapsed .chat-header {
+        border-radius: 50%;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .chat-collapsed .chat-header h3 {
+        display: none;
+    }
+
+    .chat-collapsed .toggle-chat {
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    .chat-collapsed .chat-messages,
+    .chat-collapsed .chat-input {
+        display: none;
+    }
+
+    .chat-header {
+        padding: 15px;
+        background: #2c3e50;
+        color: white;
+        border-radius: 15px 15px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chat-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+
+    .toggle-chat {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        font-size: 1.2rem;
+        padding: 5px;
+        transition: transform 0.3s ease;
+    }
+
+    .toggle-chat:hover {
+        transform: rotate(90deg);
+    }
+
+    .chat-messages {
+        flex: 1;
+        padding: 15px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: #f8f9fa;
+    }
+
+    .message {
+        max-width: 80%;
+        padding: 10px 15px;
+        border-radius: 15px;
+        margin-bottom: 10px;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .user-message {
+        background: #3498db;
+        color: white;
+        align-self: flex-end;
+        border-radius: 15px 15px 0 15px;
+    }
+
+    .bot-message {
+        background: white;
+        color: #333;
+        align-self: flex-start;
+        border-radius: 15px 15px 15px 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .chat-input {
+        padding: 15px;
+        border-top: 1px solid #eee;
+        display: flex;
+        gap: 10px;
+        background: white;
+    }
+
+    .chat-input input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        outline: none;
+        transition: border-color 0.3s ease;
+    }
+
+    .chat-input input:focus {
+        border-color: #3498db;
+    }
+
+    .chat-input button {
+        padding: 10px 15px;
+        background: #2c3e50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .chat-input button:hover {
+        background: #3498db;
+        transform: translateY(-2px);
+    }
+
+    /* Ensure main content doesn't overlap with chat */
+    .content-section {
+        margin-right: 370px;
+    }
+
+    @media (max-width: 768px) {
+        .chat-section {
+            width: 100%;
+            right: 0;
+            bottom: 0;
+            top: auto;
+            height: 60vh;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .chat-collapsed {
+            right: 20px;
+            bottom: 20px;
+        }
+
+        .content-section {
+            margin-right: 0;
+            margin-bottom: 60vh;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="content-section">
+        <div class="suggestions-section">
+            <h2>Career Suggestions</h2>
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner"></div>
+                <p>Analyzing your resume and generating personalized career suggestions...</p>
+            </div>
+            <div class="suggestions-content" id="suggestionsContent">
+                <!-- Content will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <div class="button-container">
+            <a href="{{ url_for('explore') }}" class="upload-button">Upload Another File</a>
+            <a href="{{ url_for('ats_score') }}" class="ats-button" target="_blank">Calculate ATS Score</a>
+        </div>
+    </div>
+
+    <div class="chat-section" id="chatSection">
+        <div class="chat-header">
+            <h3>Career Assistant</h3>
+            <button class="toggle-chat" id="toggleChat">×</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                Hello! I'm your career assistant. How can I help you today?
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="Type your message...">
+            <button id="sendMessage">Send</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+    // Configure marked options
+    marked.setOptions({
+        breaks: true,
+        gfm: true,
+        headerIds: true,
+        mangle: false
+    });
+
+    // Chat interface functionality
+    const chatSection = document.getElementById('chatSection');
+    const toggleChat = document.getElementById('toggleChat');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendMessage = document.getElementById('sendMessage');
+
+    // Initialize chat as collapsed
+    chatSection.classList.add('chat-collapsed');
+    toggleChat.textContent = '💬';
+
+    toggleChat.addEventListener('click', () => {
+        chatSection.classList.toggle('chat-collapsed');
+        if (chatSection.classList.contains('chat-collapsed')) {
+            toggleChat.textContent = '💬';
+        } else {
+            toggleChat.textContent = '×';
+        }
+    });
+
+    function addMessage(message, isUser = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+        messageDiv.textContent = message;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    sendMessage.addEventListener('click', () => {
+        const message = chatInput.value.trim();
+        if (message) {
+            addMessage(message, true);
+            chatInput.value = '';
+            // Here you would typically send the message to your backend
+            // and handle the response
+            setTimeout(() => {
+                addMessage("I'm a simple demo chatbot. In a real implementation, I would process your message and provide relevant career advice based on your resume and the current context.");
+            }, 1000);
+        }
+    });
+
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage.click();
+        }
+    });
+
+    // Suggestions streaming code
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const suggestionsContent = document.getElementById('suggestionsContent');
+    let eventSource = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const reconnectDelay = 3000;
+
+    function connectToSSE() {
+        if (eventSource) {
+            eventSource.close();
+        }
+
+        // Reset the session flag when page is refreshed
+        fetch('/reset_suggestions', { method: 'POST' })
+            .then(() => {
+                eventSource = new EventSource('{{ url_for("stream_suggestions") }}');
+                
+                eventSource.onopen = function() {
+                    console.log('SSE connection established');
+                    reconnectAttempts = 0;
+                    loadingSpinner.style.display = 'block';
+                    suggestionsContent.innerHTML = '';
+                };
+                
+                eventSource.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.error) {
+                            loadingSpinner.style.display = 'none';
+                            suggestionsContent.innerHTML = `
+                                <div class="error-message">
+                                    <p style="color: red;">Error: ${data.error}</p>
+                                    <p>Please try refreshing the page or uploading your resume again.</p>
+                                </div>
+                            `;
+                        } else if (data.suggestions) {
+                            loadingSpinner.style.display = 'none';
+                            // Render the markdown content
+                            const renderedContent = marked.parse(data.suggestions);
+                            suggestionsContent.innerHTML = renderedContent;
+                            
+                            // Add smooth fade-in animation
+                            suggestionsContent.style.opacity = '0';
+                            setTimeout(() => {
+                                suggestionsContent.style.transition = 'opacity 0.5s ease';
+                                suggestionsContent.style.opacity = '1';
+                            }, 100);
+                        }
+                    } catch (error) {
+                        console.error('Error parsing suggestions:', error);
+                        loadingSpinner.style.display = 'none';
+                        suggestionsContent.innerHTML = `
+                            <div class="error-message">
+                                <p style="color: red;">Error processing suggestions.</p>
+                                <p>Please try refreshing the page or uploading your resume again.</p>
+                            </div>
+                        `;
+                    }
+                };
+
+                eventSource.onerror = function(error) {
+                    console.error('SSE Error:', error);
+                    eventSource.close();
+                    
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        const delay = reconnectDelay * Math.pow(2, reconnectAttempts - 1);
+                        console.log(`Attempting to reconnect in ${delay/1000} seconds... (Attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
+                        
+                        setTimeout(() => {
+                            connectToSSE();
+                        }, delay);
+                    } else {
+                        loadingSpinner.style.display = 'none';
+                        suggestionsContent.innerHTML = `
+                            <div style="text-align: center; padding: 20px;">
+                                <p style="color: red;">Unable to connect to the server. Please try refreshing the page.</p>
+                                <button onclick="window.location.reload()" style="
+                                    padding: 10px 20px;
+                                    background-color: #2c3e50;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 5px;
+                                    cursor: pointer;
+                                    margin-top: 10px;
+                                ">Refresh Page</button>
+                            </div>
+                        `;
+                    }
+                };
+            })
+            .catch(error => {
+                console.error('Error resetting suggestions:', error);
+            });
+    }
+
+    // Initial connection
+    connectToSSE();
+
+    // Clean up on page unload
+    window.addEventListener('beforeunload', function() {
+        if (eventSource) {
+            eventSource.close();
+        }
+    });
+</script>
+{% endblock %}
