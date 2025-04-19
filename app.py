@@ -12,12 +12,15 @@ from flask import (
 )
 import os
 import json
+import uuid
 from werkzeug.utils import secure_filename
 from helper_functions import load_file, get_suggestions, load_env_variables
 from agents import create_web_crawler_and_study_materials_agent
 from ats_score import score_resume
 from dotenv import load_dotenv
 import time
+from memory import get_or_create_agent, clear_agent
+from langgraph_agent import get_response
 
 load_dotenv()
 
@@ -54,6 +57,10 @@ def results():
     filename = session.get('filename', '')
     file_type = session.get('file_type', '')
     
+    # Generate a unique session ID if not already present
+    if 'chat_session_id' not in session:
+        session['chat_session_id'] = str(uuid.uuid4())
+    
     return render_template("results.html", 
                          extracted_text=extracted_text,
                          filename=filename,
@@ -70,7 +77,8 @@ def stream_suggestions():
 
         # Don't re-run if already generated
         if session.get('suggestions_generated', False):
-            yield "data: Suggestions already generated\n\n"
+            # Return a specific message that the client can recognize
+            yield "data: \"Suggestions already generated\"\n\n"
             yield "event: close\ndata: Stream closed\n\n"
             return
 
@@ -81,6 +89,10 @@ def stream_suggestions():
         }
 
         try:
+            # Set the flag before processing to prevent concurrent requests
+            session['suggestions_generated'] = True
+            session.modified = True  # Ensure the session is saved immediately
+            
             suggestions = get_suggestions(extracted_text, agent, api_keys)
 
             # Get content from the last message
@@ -89,14 +101,14 @@ def stream_suggestions():
             else:
                 content = str(suggestions)
 
-            # Mark as generated + ensure it saves BEFORE streaming
-            session['suggestions_generated'] = True
-            session.modified = True  # <- THIS is important
-
             yield f"data: {json.dumps({'suggestions': content})}\n\n"
             yield "event: close\ndata: Stream closed\n\n"
 
         except Exception as e:
+            # If there's an error, reset the flag so it can be tried again
+            session['suggestions_generated'] = False
+            session.modified = True
+            
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
             yield "event: close\ndata: Stream closed\n\n"
 
@@ -131,6 +143,13 @@ def handle_upload():
             session['extracted_text'] = extracted_text
             session['filename'] = filename
             session['file_type'] = filename.split('.')[-1].upper()
+            
+            # Generate a new session ID for the chat
+            session['chat_session_id'] = str(uuid.uuid4())
+            
+            # Clear any existing agent for this session
+            if 'chat_session_id' in session:
+                clear_agent(session['chat_session_id'])
             
             # Redirect to the results page immediately
             return redirect(url_for('results'))
@@ -181,6 +200,46 @@ def calculate_ats_score():
 def reset_suggestions():
     session['suggestions_generated'] = False
     return jsonify({"status": "success"})
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    try:
+        message = request.json.get('message', '')
+        if not message:
+            return jsonify({"error": "No message provided"}), 400
+            
+        session_id = session.get('chat_session_id')
+        if not session_id:
+            session['chat_session_id'] = str(uuid.uuid4())
+            session_id = session['chat_session_id']
+            
+        filename = session.get('filename')
+        extracted_text = session.get('extracted_text', '')
+        
+        if not filename or not extracted_text:
+            return jsonify({"error": "No resume found. Please upload a resume first."}), 400
+            
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        # Get or create the agent for this session
+        agent = get_or_create_agent(session_id, file_path, extracted_text)
+        
+        # Configure the agent with the session ID
+        config = {
+            "configurable": {
+                "thread_id": session_id,
+                "vector_store_enabled": True  # Add flag to indicate vector store availability
+            }
+        }
+        
+        # Get response from the agent
+        response = get_response(message, config, agent)
+        
+        return jsonify({"response": response})
+        
+    except Exception as e:
+        app.logger.error(f"Error in chat endpoint: {str(e)}")
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

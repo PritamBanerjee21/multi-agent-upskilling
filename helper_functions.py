@@ -6,6 +6,7 @@ from io import BytesIO
 from helper import get_resume_details, get_resume_details_from_image
 from PyPDF2 import PdfReader
 from docx import Document
+import docx2txt
 
 from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -27,24 +28,53 @@ def load_env_variables():
     return gemini_api_key, youtube_api_key, groq_api_key
 
 def load_file(uploaded_file):
-
     if uploaded_file is not None:
-
-        file_extension = os.path.splitext(uploaded_file)[1]
+        file_extension = os.path.splitext(uploaded_file)[1].lower()
         file_buffer = uploaded_file
 
         if file_extension == ".pdf":
             reader = PdfReader(file_buffer)
             text = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
-
+            
         elif file_extension in [".docx", ".doc"]:
-            doc = Document(file_buffer)  # Load DOCX directly from memory
-            text = "\n".join([para.text for para in doc.paragraphs])
-
-        elif file_extension in [".png",".jpg",".jpeg"]:
+            try:
+                # Try multiple methods to extract text from Word docs
+                text = ""
+                try:
+                    # Method 1: python-docx
+                    doc = Document(file_buffer)
+                    paragraphs = [para.text for para in doc.paragraphs if para.text.strip()]
+                    
+                    # Get text from tables
+                    for table in doc.tables:
+                        for row in table.rows:
+                            for cell in row.cells:
+                                if cell.text.strip():
+                                    paragraphs.append(cell.text.strip())
+                    
+                    text = "\n".join(paragraphs)
+                except:
+                    print("python-docx failed, trying docx2txt...")
+                
+                # If text is still empty, try docx2txt
+                if not text.strip():
+                    text = docx2txt.process(file_buffer)
+                
+                if not text.strip():
+                    raise ValueError("Could not extract text from document")
+                    
+                return text.strip()
+                
+            except Exception as e:
+                print(f"Error processing Word document: {e}")
+                return None
+                
+        elif file_extension in [".png", ".jpg", ".jpeg"]:
             text=get_resume_details_from_image(image_file_path=file_buffer)
-
+            
         return text
+    
+    return None
     
 def get_suggestions(text,agent,api_keys: dict):
     try:
