@@ -76,14 +76,6 @@ An intelligent web application that analyzes resumes, provides personalized care
 - Test coverage monitoring
 - Performance testing for vector operations
 
-## Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
-
 ## Troubleshooting
 
 ### Common Issues
@@ -118,12 +110,6 @@ An intelligent web application that analyzes resumes, provides personalized care
 - Session management
 - Rate limiting
 - Secure file handling
-
-
-## Contact
-
-Your Name - your.email@example.com
-Project Link: [Click Here](https://github.com/sohamfcb/project-name)
 
 ## Acknowledgments
 
