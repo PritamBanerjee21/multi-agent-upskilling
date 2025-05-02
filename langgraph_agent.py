@@ -1,3 +1,9 @@
+"""
+LangGraph agent implementation for resume analysis and career guidance.
+This module provides functionality for creating and managing LangGraph agents
+that can analyze resumes and provide personalized career recommendations.
+"""
+
 from typing import Annotated
 
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -26,18 +32,37 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Load API keys from environment variables
 os.environ["TAVILY_API_KEY"]=os.getenv("TAVILY_API_KEY")
 gemini_api_key=os.getenv("GEMINI_API_KEY")
 groq_api_key=os.getenv("GROQ_API_KEY")
 os.environ["OPENAI_API_KEY"]=os.getenv("OPENAI_API_KEY")
 
+# Initialize embedding model
 embedding_model=HuggingFaceEmbeddings(model_name="sentence-transformers-embedding")
 
 class State(TypedDict):
+    """
+    TypedDict for representing the state of the LangGraph agent.
+    
+    Attributes:
+        messages (list): List of messages in the conversation
+    """
     messages: Annotated[list, add_messages]
 
 def load_and_prepare_file(file_path, return_text, chunk_size=200, chunk_overlap=10):
+    """
+    Load and prepare a file for vector storage and analysis.
     
+    Args:
+        file_path (str): Path to the file to load
+        return_text (str): Text content to include in vector store
+        chunk_size (int): Size of text chunks for processing
+        chunk_overlap (int): Overlap between chunks
+        
+    Returns:
+        FAISS: Vector store containing the processed document
+    """
     # Generate a unique path for this session's vectorstore
     file_name = os.path.basename(file_path)
     session_id = os.path.splitext(file_name)[0]
@@ -71,6 +96,7 @@ def load_and_prepare_file(file_path, return_text, chunk_size=200, chunk_overlap=
         # For non-PDF/Word files, create a document from the extracted text
         docs = [Document(page_content=return_text, metadata={"source": file_path})]
     
+    # Split documents into chunks
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap
@@ -92,11 +118,24 @@ def load_and_prepare_file(file_path, return_text, chunk_size=200, chunk_overlap=
     return vector_store
 
 def create_langgraph_agent(model: str, file_path: str, return_text: str, chunk_size=200, chunk_overlap=20):
-
+    """
+    Create a LangGraph agent for resume analysis.
+    
+    Args:
+        model (str): Model to use ("gemini", "groq", or "openai")
+        file_path (str): Path to the resume file
+        return_text (str): Text content to include in analysis
+        chunk_size (int): Size of text chunks for processing
+        chunk_overlap (int): Overlap between chunks
+        
+    Returns:
+        tuple: (Graph, VectorStore) - The configured agent and its vector store
+    """
     graph_builder = StateGraph(State)
 
     memory=MemorySaver()
 
+    # Initialize search tool and vector store
     search_tool = TavilySearchResults(max_results=5)
     vector_store = load_and_prepare_file(
         file_path=file_path,
@@ -105,6 +144,7 @@ def create_langgraph_agent(model: str, file_path: str, return_text: str, chunk_s
         chunk_overlap=chunk_overlap
     )
 
+    # Initialize language model based on specified type
     if model=="gemini":
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
@@ -126,7 +166,15 @@ def create_langgraph_agent(model: str, file_path: str, return_text: str, chunk_s
 
     @tool
     def recall_memory(query: str) -> str:
-        """Use this tool to answer questions about the user's career, skills, skill gaps, or resume."""
+        """
+        Tool to answer questions about the user's career, skills, and resume.
+        
+        Args:
+            query (str): Question about the resume or career
+            
+        Returns:
+            str: Response based on resume information
+        """
         try:
             # Perform similarity search directly on the vector store instance
             results = vector_store.similarity_search(query, k=3)
@@ -154,10 +202,20 @@ IMPORTANT INSTRUCTIONS:
             print(f"Error in recall_memory: {str(e)}")
             return "I encountered an error while accessing your resume information. Could you please rephrase your question?"
 
+    # Configure tools and agent
     tools = [search_tool, recall_memory]
     llm_with_tools = llm.bind_tools(tools)
     
     def chatbot(state: State):
+        """
+        Chatbot function that processes messages and generates responses.
+        
+        Args:
+            state (State): Current state of the conversation
+            
+        Returns:
+            dict: Updated state with new message
+        """
         message = llm_with_tools.invoke(state["messages"])
         # Because we will be interrupting during tool execution,
         # we disable parallel tool calling to avoid repeating any
@@ -165,6 +223,7 @@ IMPORTANT INSTRUCTIONS:
         assert len(message.tool_calls) <= 1
         return {"messages": [message]}
     
+    # Build the graph
     graph_builder.add_node("chatbot", chatbot)
     tool_node = ToolNode(tools=tools)
     graph_builder.add_node("tools", tool_node)
@@ -180,6 +239,17 @@ IMPORTANT INSTRUCTIONS:
     return graph, vector_store
 
 def get_response(user_input:str, config:dict, agent):
+    """
+    Get a response from the agent for a given input.
+    
+    Args:
+        user_input (str): User's question or input
+        config (dict): Configuration for the agent
+        agent: The LangGraph agent instance
+        
+    Returns:
+        str: Agent's response to the input
+    """
     try:
         outputs = []
         events = agent.stream(

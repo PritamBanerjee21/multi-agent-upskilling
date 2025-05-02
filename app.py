@@ -1,3 +1,8 @@
+"""
+Flask application for SkillSync AI - A career guidance and resume analysis platform.
+This application provides features for resume analysis, ATS scoring, and personalized career recommendations.
+"""
+
 from flask import (
     Flask,
     render_template,
@@ -22,36 +27,68 @@ import time
 from memory import get_or_create_agent, clear_agent
 from langgraph_agent import get_response
 
+# Load environment variables
 load_dotenv()
 
+# Load API keys
 gemini_api_key, youtube_api_key, groq_api_key = load_env_variables()
 
+# Initialize Flask application
 app = Flask(__name__)
 
+# Configure upload settings
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'}
 
+# Set Flask configuration
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 app.config["SECRET_KEY"] = "visca_el_barca"
 
 def allowed_file(filename):
+    """
+    Check if the uploaded file has an allowed extension.
+    
+    Args:
+        filename (str): Name of the file to check
+        
+    Returns:
+        bool: True if file extension is allowed, False otherwise
+    """
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Create a global agent instance
+# Create a global agent instance for resume analysis
 agent = create_web_crawler_and_study_materials_agent(model="gemini")
 
 @app.route("/")
 @app.route("/home")
 def home():
+    """
+    Render the home page.
+    
+    Returns:
+        str: Rendered home.html template
+    """
     return render_template("home.html")
 
 @app.route("/explore")
 def explore():
+    """
+    Render the explore page.
+    
+    Returns:
+        str: Rendered explore.html template
+    """
     return render_template("explore.html")
 
 @app.route("/results")
 def results():
+    """
+    Render the results page with extracted resume information.
+    
+    Returns:
+        str: Rendered results.html template with resume data
+    """
     # Get the extracted text from the session
     extracted_text = session.get('extracted_text', '')
     filename = session.get('filename', '')
@@ -68,6 +105,13 @@ def results():
 
 @app.route("/stream_suggestions")
 def stream_suggestions():
+    """
+    Stream career suggestions based on the uploaded resume.
+    Uses Server-Sent Events (SSE) to provide real-time updates.
+    
+    Returns:
+        Response: SSE response with career suggestions
+    """
     def generate():
         extracted_text = session.get('extracted_text', '')
         if not extracted_text:
@@ -114,9 +158,14 @@ def stream_suggestions():
 
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
-
 @app.route("/handle_upload", methods=["GET", "POST"])
 def handle_upload():
+    """
+    Handle file upload and process the resume.
+    
+    Returns:
+        Response: Redirect to results page or explore page
+    """
     if "file" not in request.files:
         flash("No file part")
         return redirect(request.url)
@@ -158,10 +207,22 @@ def handle_upload():
 
 @app.route("/ats_score")
 def ats_score():
+    """
+    Render the ATS score page.
+    
+    Returns:
+        str: Rendered ats_score.html template
+    """
     return render_template("ats_score.html")
 
 @app.route("/calculate_ats_score", methods=["POST"])
 def calculate_ats_score():
+    """
+    Calculate ATS score for the uploaded resume against a job description.
+    
+    Returns:
+        Response: JSON response with ATS score and analysis
+    """
     try:
         job_description = request.form.get('job_description')
         if not job_description:
@@ -198,11 +259,23 @@ def calculate_ats_score():
 
 @app.route("/reset_suggestions", methods=["POST"])
 def reset_suggestions():
+    """
+    Reset the suggestions flag to allow generating new suggestions.
+    
+    Returns:
+        Response: JSON response indicating success
+    """
     session['suggestions_generated'] = False
     return jsonify({"status": "success"})
 
 @app.route("/chat", methods=["POST"])
 def chat():
+    """
+    Handle chat interactions with the AI agent.
+    
+    Returns:
+        Response: JSON response with AI's reply
+    """
     try:
         message = request.json.get('message', '')
         if not message:

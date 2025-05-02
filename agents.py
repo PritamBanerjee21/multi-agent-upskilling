@@ -1,3 +1,9 @@
+"""
+Agent creation and management module.
+This module contains functions for creating and configuring AI agents for resume analysis,
+web crawling, and study materials generation.
+"""
+
 # from langchain.document_loaders import PyPDFLoader, UnstructuredWordDocumentLoader
 # from langchain.text_splitter import RecursiveCharacterTextSplitter
 # from langchain_community.vectorstores import FAISS
@@ -24,18 +30,28 @@ import requests
 
 load_dotenv()
 
+# Load API keys from environment variables
 youtube_api_key=os.getenv("YOUTUBE_API_KEY")
 os.environ["OPENAI_API_KEY"]=os.getenv("OPENAI_API_KEY")
 groq_api_key=os.getenv("GROQ_API_KEY")
 gemini_api_key=os.getenv("GEMINI_API_KEY")
 
+# Initialize Gemini model
 model=ChatGoogleGenerativeAI(
     model="gemini-2.0-flash",
     api_key=gemini_api_key
 )
 
 def fetch_coursera_courses(query: str):
-    """Fetches courses from Coursera API based on a search query and returns names, descriptions, and URLs."""
+    """
+    Fetch courses from Coursera API based on a search query.
+    
+    Args:
+        query (str): Search query for courses
+        
+    Returns:
+        str: Formatted course information including names, descriptions, and URLs
+    """
     url = f"https://api.coursera.org/api/courses.v1?q=search&query={query}&fields=name,description,partnerIds,slug"
 
     response = requests.get(url)
@@ -59,7 +75,16 @@ def fetch_coursera_courses(query: str):
         return f"Error: {response.status_code} - {response.text}"
 
 def youtube_search(query, max_results=5):
-    """Search YouTube videos using the YouTube API and return formatted results."""
+    """
+    Search YouTube videos using the YouTube API.
+    
+    Args:
+        query (str): Search query for videos
+        max_results (int): Maximum number of results to return
+        
+    Returns:
+        str: Formatted video information including titles, descriptions, and URLs
+    """
     youtube = build("youtube", "v3", developerKey=youtube_api_key)
 
     search_response = youtube.search().list(
@@ -96,6 +121,12 @@ def youtube_search(query, max_results=5):
 def custom_state_modifier(state):
     """
     Modifies the state to either use tools or generate a response from the model.
+    
+    Args:
+        state (dict): Current state of the agent
+        
+    Returns:
+        dict: Modified state
     """
     if "messages" not in state:
         state["messages"] = []  # Ensure messages list exists
@@ -107,11 +138,28 @@ def custom_state_modifier(state):
     return state
 
 def generate_text(query):
-    """Simple function to generate data from the model's knowledge base if the query doesn't go with the external tools."""
+    """
+    Generate text response from the model's knowledge base.
+    
+    Args:
+        query: Input query for the model
+        
+    Returns:
+        str: Generated text response
+    """
     return model.invoke(query).content  # Assuming `model` is your language model
 
 def create_model(name):
-
+    """
+    Create and configure a language model based on the specified name.
+    
+    Args:
+        name (str): Model name ("groq", "gpt", or "gemini")
+        
+    Returns:
+        ChatModel: Configured language model
+        str: Error message if invalid model name
+    """
     if name=="groq":
         model=ChatGroq(
             model="qwen-2.5-32b",
@@ -137,7 +185,15 @@ def create_model(name):
     
 
 def create_web_crawler_and_study_materials_agent(model="groq"):
-
+    """
+    Create an agent for web crawling and study materials generation.
+    
+    Args:
+        model (str): Base model to use ("groq", "gemini", or "gpt")
+        
+    Returns:
+        Agent: Configured agent with tools and capabilities
+    """
     if model=="groq":
         model=ChatGroq(
             model="meta-llama/llama-4-maverick-17b-128e-instruct",
@@ -155,22 +211,26 @@ def create_web_crawler_and_study_materials_agent(model="groq"):
             model='gpt-4o'
         )
 
+    # Initialize Wikipedia tool
     wiki_api_wrapper=WikipediaAPIWrapper(top_k_results=5)
     wiki_tool=WikipediaQueryRun(api_wrapper=wiki_api_wrapper,
-                                description="A tool to explain things in text format. Use this tool if you think the user’s asked concept is best explained through text.",
+                                description="A tool to explain things in text format. Use this tool if you think the user's asked concept is best explained through text.",
                                 name="wiki_tool")
 
+    # Initialize DuckDuckGo search tool
     duckduckgo_api_wrapper=DuckDuckGoSearchAPIWrapper()
     duckduckgo_search_tool=DuckDuckGoSearchResults(api_wrapper=duckduckgo_api_wrapper,
                             description="A search engine. Use this tool if you need to answer questions about current events. Input should be a search query.",
                             name="duckduckgo_search_tool")
 
+    # Initialize YouTube search tool
     youtube_search_tool=Tool(
         name="YouTube_Video_Search",
         func=youtube_search,
         description="Searches for YouTube videos related to a given query and returns the top 5 videos along with their links, titles, descriptions, and channel names"
     )
 
+    # Initialize Coursera search tool
     coursera_tool=Tool(
         name="coursera_search_tool",
         func=fetch_coursera_courses,
@@ -179,12 +239,14 @@ def create_web_crawler_and_study_materials_agent(model="groq"):
 
     system_prompt="You are a helpful assistant named Friday."
 
+    # Initialize text generation tool
     text_gen_tool = Tool(
         name="text_generator",
         func=generate_text,
         description="Use this tool to generate essays, summaries, or general text responses."
     )
 
+    # Combine all tools
     tools=[wiki_tool,coursera_tool,duckduckgo_search_tool,youtube_search_tool,text_gen_tool]
     # memory=SqliteSaver("agent_memory.sqlite")
     # store = SQLiteStore(database_path="memory.sqlite")
