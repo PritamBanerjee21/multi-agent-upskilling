@@ -125,7 +125,7 @@ if btn1:
     )
 
     model_groq=ChatGroq(
-        model="qwen-2.5-32b",
+        model="llama-3.3-70b-versatile",
         api_key=groq_api_key
     )
 
