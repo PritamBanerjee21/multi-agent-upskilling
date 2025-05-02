@@ -140,7 +140,7 @@ def create_web_crawler_and_study_materials_agent(model="groq"):
 
     if model=="groq":
         model=ChatGroq(
-            model="qwen-2.5-32b",
+            model="meta-llama/llama-4-maverick-17b-128e-instruct",
             api_key=groq_api_key
         )
 

@@ -8,6 +8,7 @@ import os
 from io import BytesIO
 from PyPDF2 import PdfReader
 from docx import Document
+from helper_functions import load_file
 
 # Extracting text
 def extract_text_from_cv(pdf_path):
@@ -127,8 +128,17 @@ def calculate_final_score(keyword_score, semantic_score, skill_score):
 
 
 # Complete scoring process
-def score_resume(resume_path, job_description):
-    resume_text = extract_text_from_cv(resume_path)
+def score_resume(resume_path, job_description, scoring_function="extract"):
+
+    if scoring_function=="extract":
+        resume_text = extract_text_from_cv(resume_path)
+
+    elif scoring_function=="load_file":
+        resume_text=load_file(resume_path)
+    
+    else:
+        raise ValueError("Invalid value for scoring_function. Select one among 'extract' and 'load_file'.")
+
     jd_token, jd_doc = clean_text(job_description)
 
     job_keywords = extract_keywords(jd_doc)

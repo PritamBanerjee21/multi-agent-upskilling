@@ -40,6 +40,7 @@ arxiv
 unstructured
 unstructured-client
 tavily-python
+docx2txt
 
 autogen
 pyautogen
@@ -55,3 +56,9 @@ spacy
 sentence-transformers
 torch
 scikit-learn
+
+flask
+flask-wtf
+email-validator
+flask-sqlalchemy
+Flask-Session
