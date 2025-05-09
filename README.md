@@ -4,9 +4,10 @@
 
 A comprehensive platform that analyzes resumes, provides personalized career guidance, and helps bridge skill gaps through intelligent AI-driven recommendations.
 
-## Table of Contents
+# Table of Contents
 - [Features](#features)
 - [Installation](#installation)
+- [Troubleshooting](#troubleshooting)
 - [Usage](#usage)
 - [Architecture](#architecture)
 - [API Documentation](#api-documentation)
@@ -85,7 +86,7 @@ python3 app.py
 
 The application will be available at `http://localhost:5000`
 
-## Troubleshooting
+# Troubleshooting
 1. If you encounter API key errors:
    - Verify all API keys are correctly set in `.env`
    - Check if the keys are active and have proper permissions
@@ -98,7 +99,7 @@ The application will be available at `http://localhost:5000`
    - Ensure the `uploads` directory has write permissions
    - Check if the application has access to create the `cached_faiss_store` directory
 
-## Features
+# Features
 - **Resume Analysis**
   - Multi-format support (PDF, DOC, DOCX, Images)
   - Text extraction and parsing
@@ -123,7 +124,7 @@ The application will be available at `http://localhost:5000`
   - Real-time suggestions
   - Context-aware responses
 
-## Usage
+# Usage
 1. **Upload Resume**
    - Navigate to the explore page
    - Upload your resume in supported formats
@@ -147,7 +148,7 @@ The application will be available at `http://localhost:5000`
    - Request learning resources
    - Discuss skill development
 
-## Architecture
+# Architecture
 - **Frontend**
   - HTML/CSS/JavaScript
   - Server-Sent Events for real-time updates
@@ -165,9 +166,9 @@ The application will be available at `http://localhost:5000`
   - Sentence Transformers
   - spaCy for NLP
 
-## API Documentation
+# API Documentation
 
-### Resume Analysis Endpoints
+## Resume Analysis Endpoints
 ```python
 POST /handle_upload
 # Upload and process resume
@@ -186,7 +187,7 @@ POST /chat
 # Returns: JSON with AI response
 ```
 
-### Key Functions
+## Key Functions
 ```python
 def get_suggestions(text, agent, api_keys)
 # Generate career suggestions based on resume
@@ -198,14 +199,14 @@ def get_resume_details(text, model="gemini")
 # Extract and analyze resume details
 ```
 
-## Contributing
+# Contributing
 1. Fork the repository
 2. Create a feature branch
 3. Commit your changes
 4. Push to the branch
 5. Create a Pull Request
 
-### Development Setup
+## Development Setup
 ```bash
 # Install development dependencies
 pip install -r requirements-dev.txt
@@ -217,7 +218,7 @@ pytest
 flake8
 ```
 
-### Project Structure
+## Project Structure
 ```
 skillsync-ai/
 ├── app.py              # Main Flask application
@@ -232,7 +233,7 @@ skillsync-ai/
 └── cached_faiss_store/ # Vector store cache
 ```
 
-### Environment Variables
+## Environment Variables
 ```env
 GEMINI_API_KEY=your_gemini_api_key
 YOUTUBE_API_KEY=your_youtube_api_key
@@ -241,7 +242,7 @@ OPENAI_API_KEY=your_openai_api_key
 TAVILY_API_KEY=your_tavily_api_key
 ```
 
-### Dependencies
+## Dependencies
 - Flask
 - LangGraph
 - FAISS
