@@ -1,19 +1,11 @@
-numpy
-pandas
-python-dotenv
-matplotlib
-seaborn
-plotly
-streamlit
-pydantic
+# Core Dependencies
+flask
+flask-session
 
-ipykernel
-jupyter
-
+# AI and Machine Learning
 langchain
 langchain-core
 langchain-community
-langchain-ollama
 langchain-groq
 langchain-openai
 langchain-google-genai
@@ -23,42 +15,47 @@ langgraph.checkpoint.sqlite
 langchain-unstructured
 langchain-tavily
 
-ollama
+# AI Model Providers
 groq
 openai
 google-generativeai
-faiss-cpu
+
+# Data Processing and Analysis
+numpy
+pandas
+scikit-learn
+torch
+transformers
+sentence-transformers
+spacy
+
+# Document Processing
 pypdf
 pypdf2
-unstructured
-docx
 python-docx
+docx2txt
+PyMuPDF
+unstructured
+unstructured-client
+
+# Vector Storage and Search
+faiss-cpu
+tavily-python
+
+# Web and API
 wikipedia
 youtube-search
 google-api-python-client
 arxiv
-unstructured
-unstructured-client
-tavily-python
-docx2txt
 
-autogen
-pyautogen
-
-smolagents
-smolagents[litellm]
-transformers
-
+# Development and Testing
+ipykernel
+jupyter
+pydantic
 exception
 
-PyMuPDF
-spacy
-sentence-transformers
-torch
-scikit-learn
-
-flask
-flask-wtf
-email-validator
-flask-sqlalchemy
-Flask-Session
+# Visualization
+matplotlib
+seaborn
+plotly
+streamlit
