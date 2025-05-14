@@ -5,9 +5,9 @@
 A comprehensive platform that analyzes resumes, provides personalized career guidance, and helps bridge skill gaps through intelligent AI-driven recommendations.
 
 # Table of Contents
-- [Features](#features)
 - [Installation](#installation)
 - [Troubleshooting](#troubleshooting)
+- [Features](#features)
 - [Usage](#usage)
 - [Architecture](#architecture)
 - [API Documentation](#api-documentation)
